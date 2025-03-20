@@ -1,4 +1,23 @@
-# p-map
+# p-map-cjs
+
+## A drop in replacement for p-map that supports CJS
+
+### Why
+
+From version 4 onwards, p-map and all other packages issued by https://github.com/sindresorhus it seems, are ESM only.
+
+While evolution is a good thing it's unrealistic that entire codebases will adapt in a few month, if at all.
+
+Before v4 `p-map` uses a custom packages `aggregate-error` as a replacement of `AggregateError` for compatibility with node versions < 15.
+And this package is now ESM only as well since v4, and the `errors` property was also added in the v4.
+
+As a result, if you use `p-map` in a CJs project, and you happen to have an AggregateError you can't have any details about the aggregated errors unles you convert it to string.
+
+### Improvements:
+
+- Unmodified package name so you don't have to rewrite your imports
+- Sources are now in typescript
+- CJS compatible
 
 > Map over promises concurrently
 
@@ -9,27 +28,27 @@ This is different from `Promise.all()` in that you can control the concurrency a
 ## Install
 
 ```sh
-npm install p-map
+yarn add p-map@https://github.com/serybva/p-map-cjs.git
 ```
 
 ## Usage
 
 ```js
-import pMap from 'p-map';
-import got from 'got';
+import pMap from "p-map";
+import got from "got";
 
 const sites = [
-	getWebsiteFromUsername('sindresorhus'), //=> Promise
-	'https://avajs.dev',
-	'https://github.com'
+	getWebsiteFromUsername("sindresorhus"), //=> Promise
+	"https://avajs.dev",
+	"https://github.com",
 ];
 
-const mapper = async site => {
-	const {requestUrl} = await got.head(site);
+const mapper = async (site) => {
+	const { requestUrl } = await got.head(site);
 	return requestUrl;
 };
 
-const result = await pMap(sites, mapper, {concurrency: 2});
+const result = await pMap(sites, mapper, { concurrency: 2 });
 
 console.log(result);
 //=> ['https://sindresorhus.com/', 'https://avajs.dev/', 'https://github.com/']
@@ -46,12 +65,14 @@ Returns a `Promise` that is fulfilled when all promises in `input` and ones retu
 Returns an async iterable that streams each return value from `mapper` in order.
 
 ```js
-import {pMapIterable} from 'p-map';
+import { pMapIterable } from "p-map";
 
 // Multiple posts are fetched concurrently, with limited concurrency and backpressure
-for await (const post of pMapIterable(postIds, getPostMetadata, {concurrency: 8})) {
+for await (const post of pMapIterable(postIds, getPostMetadata, {
+	concurrency: 8,
+})) {
 	console.log(post);
-};
+}
 ```
 
 #### input
@@ -74,7 +95,7 @@ Type: `object`
 
 ##### concurrency
 
-Type: `number` *(Integer)*\
+Type: `number` _(Integer)_\
 Default: `Infinity`\
 Minimum: `1`
 
@@ -84,7 +105,7 @@ Number of concurrently pending promises returned by `mapper`.
 
 **Only for `pMapIterable`**
 
-Type: `number` *(Integer)*\
+Type: `number` _(Integer)_\
 Default: `options.concurrency`\
 Minimum: `options.concurrency`
 
@@ -103,7 +124,7 @@ When `true`, the first mapper rejection will be rejected back to the consumer.
 
 When `false`, instead of stopping when a promise rejects, it will wait for all the promises to settle and then reject with an [`AggregateError`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError) containing all the errors from the rejected promises.
 
-Caveat: When `true`, any already-started async mappers will continue to run until they resolve or reject. In the case of infinite concurrency with sync iterables, *all* mappers are invoked on startup and will continue after the first rejection. [Issue #51](https://github.com/sindresorhus/p-map/issues/51) can be implemented for abort control.
+Caveat: When `true`, any already-started async mappers will continue to run until they resolve or reject. In the case of infinite concurrency with sync iterables, _all_ mappers are invoked on startup and will continue after the first rejection. [Issue #51](https://github.com/sindresorhus/p-map/issues/51) can be implemented for abort control.
 
 ##### signal
 
@@ -114,8 +135,8 @@ Type: [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSign
 You can abort the promises using [`AbortController`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController).
 
 ```js
-import pMap from 'p-map';
-import delay from 'delay';
+import pMap from "p-map";
+import delay from "delay";
 
 const abortController = new AbortController();
 
@@ -123,9 +144,11 @@ setTimeout(() => {
 	abortController.abort();
 }, 500);
 
-const mapper = async value => value;
+const mapper = async (value) => value;
 
-await pMap([delay(1000), delay(1000)], mapper, {signal: abortController.signal});
+await pMap([delay(1000), delay(1000)], mapper, {
+	signal: abortController.signal,
+});
 // Throws AbortError (DOMException) after 500 ms.
 ```
 
@@ -134,36 +157,27 @@ await pMap([delay(1000), delay(1000)], mapper, {signal: abortController.signal})
 Return this value from a `mapper` function to skip including the value in the returned array.
 
 ```js
-import pMap, {pMapSkip} from 'p-map';
-import got from 'got';
+import pMap, { pMapSkip } from "p-map";
+import got from "got";
 
 const sites = [
-	getWebsiteFromUsername('sindresorhus'), //=> Promise
-	'https://avajs.dev',
-	'https://example.invalid',
-	'https://github.com'
+	getWebsiteFromUsername("sindresorhus"), //=> Promise
+	"https://avajs.dev",
+	"https://example.invalid",
+	"https://github.com",
 ];
 
-const mapper = async site => {
+const mapper = async (site) => {
 	try {
-		const {requestUrl} = await got.head(site);
+		const { requestUrl } = await got.head(site);
 		return requestUrl;
 	} catch {
 		return pMapSkip;
 	}
 };
 
-const result = await pMap(sites, mapper, {concurrency: 2});
+const result = await pMap(sites, mapper, { concurrency: 2 });
 
 console.log(result);
 //=> ['https://sindresorhus.com/', 'https://avajs.dev/', 'https://github.com/']
 ```
-
-## Related
-
-- [p-all](https://github.com/sindresorhus/p-all) - Run promise-returning & async functions concurrently with optional limited concurrency
-- [p-filter](https://github.com/sindresorhus/p-filter) - Filter promises concurrently
-- [p-times](https://github.com/sindresorhus/p-times) - Run promise-returning & async functions a specific number of times concurrently
-- [p-props](https://github.com/sindresorhus/p-props) - Like `Promise.all()` but for `Map` and `Object`
-- [p-map-series](https://github.com/sindresorhus/p-map-series) - Map over promises serially
-- [More…](https://github.com/sindresorhus/promise-fun)
