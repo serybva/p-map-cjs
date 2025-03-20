@@ -1,10 +1,10 @@
-import test from 'ava';
-import timeSpan from 'time-span';
-import assertInRange from './assert-in-range.js';
-import pMap, {pMapSkip} from './index.js';
+import test from "ava";
+import assertInRange from "./utils/assert-in-range";
+import pMap, { pMapSkip } from "../index";
+import { timeSpan } from "./utils/time-span";
 
-function generateSkipPerformanceData(length) {
-	const data = [];
+function generateSkipPerformanceData(length: number): (typeof pMapSkip)[] {
+	const data: (typeof pMapSkip)[] = [];
 	for (let index = 0; index < length; index++) {
 		data.push(pMapSkip);
 	}
@@ -12,15 +12,19 @@ function generateSkipPerformanceData(length) {
 	return data;
 }
 
-test('multiple pMapSkips - algorithmic complexity', async t => {
-	const testData = [generateSkipPerformanceData(1000), generateSkipPerformanceData(10_000), generateSkipPerformanceData(100_000)];
-	const testDurationsMS = [];
+test("multiple pMapSkips - algorithmic complexity", async (t) => {
+	const testData = [
+		generateSkipPerformanceData(1000),
+		generateSkipPerformanceData(10_000),
+		generateSkipPerformanceData(100_000),
+	];
+	const testDurationsMS: number[] = [];
 
 	for (const data of testData) {
 		const end = timeSpan();
 		// eslint-disable-next-line no-await-in-loop
-		await pMap(data, async value => value);
-		testDurationsMS.push(end());
+		await pMap(data, async (value) => value);
+		testDurationsMS.push(Number(end()));
 	}
 
 	for (let index = 0; index < testDurationsMS.length - 1; index++) {
@@ -32,6 +36,9 @@ test('multiple pMapSkips - algorithmic complexity', async t => {
 		// shorter test. This is not perfect... there is some fluctuation.
 		// The idea here is to catch a regression that makes `pMapSkip` handling O(n^2)
 		// on the number of `pMapSkip` items in the input.
-		assertInRange(t, longerDuration, {start: 1.2 * smallerDuration, end: 15 * smallerDuration});
+		assertInRange(t, longerDuration, {
+			start: 1.2 * smallerDuration,
+			end: 15 * smallerDuration,
+		});
 	}
 });

@@ -1,0 +1,18 @@
+{
+	"compilerOptions": {
+		"noImplicitAny": true,
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"baseUrl": ".",
+		"rootDir": ".",
+		"lib": ["ESNext", "DOM"],
+		"target": "ES2019",
+		"declaration": true,
+		"listEmittedFiles": true
+	},
+	"include": ["./**/*.ts"],
+	"exclude": ["tests/**", "lib/**/*.ts"]
+}
